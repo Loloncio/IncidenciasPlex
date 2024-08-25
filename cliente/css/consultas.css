@@ -1,0 +1,279 @@
+/* styles.css */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    background-color: #f4f9ff;
+    height: 100vh;
+    position: relative;
+}
+
+form {
+    margin-top: 3em;
+}
+
+/* Ajuste del botón para que esté siempre visible */
+.toggle-sidebar {
+    background-color: #469fff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 16px;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+    transition: background-color 0.3s ease;
+}
+
+.toggle-sidebar:hover {
+    background-color: #005bb5;
+}
+
+.sidebar {
+    width: 20%;
+    background-color: #007bff;
+    padding: 20px;
+    box-sizing: border-box;
+    border-right: 2px solid #005bb5;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    color: white;
+    position: fixed;
+    left: 0;
+    top: 0;
+    transition: transform 0.3s ease;
+    z-index: 500;
+}
+
+.sidebar.hidden {
+    transform: translateX(-100%);
+}
+
+.content {
+    width: 80%;
+    padding: 20px;
+    margin-top: 2em;
+    box-sizing: border-box;
+    overflow-y: auto;
+    display: flexbox;
+    background-color: #f4f9ff;
+    margin-left: 20%;
+    transition: margin-left 0.3s ease;
+}
+
+.content.expanded {
+    margin-left: 0;
+    width: 100%;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: white;
+}
+
+.form-group input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+.form-group input[type="date"], 
+.form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #cce0ff;
+    box-sizing: border-box;
+    font-size: 14px;
+    background-color: white;
+    color: #004080;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input[type="date"]:focus, 
+.form-group select:focus {
+    border-color: #005bb5;
+    outline: none;
+}
+
+.form-group button {
+    background-color: #005bb5;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+    transition: background-color 0.3s ease;
+}
+
+.form-group button:hover {
+    background-color: #004080;
+}
+.clear-date{
+    margin-top: 1em;
+}
+.content h2 {
+    color: #005bb5;
+    border-bottom: 2px solid #cce0ff;
+    padding-bottom: 10px;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+/* Contenedor de la lista y botón */
+.list-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+#list-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.send-button {
+    background-color: #005bb5;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 20px;
+    align-self: flex-end; /* Alinea el botón a la derecha dentro de su contenedor */
+    transition: background-color 0.3s ease;
+}
+
+.send-button:hover {
+    background-color: #004080;
+}
+/*-------------------------------------
+  ----- Estilo de tabla ---------------
+  -------------------------------------*/
+/* Estilo para las flechitas*/
+.arrow {
+    font-size: 12px;
+    margin-left: 5px;
+    color: #888;
+}
+.sorted-asc {
+    background-color: #8efda8; /* Light green for ascending order */
+}
+
+.sorted-desc {
+    background-color: #ff8791; /* Light red for descending order */
+}
+
+table{
+    width: 100%;
+}
+.table-row {
+    background-color: white;
+    border: 1px solid #cce0ff;
+    border-radius: 50px;
+    padding: 15px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+    min-width: 100%;
+}
+
+.table-row:hover {
+    background-color: #e6f3ff;
+}
+
+/* Style for table headers */
+.table th {
+    background-color: #f4f4f4;
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+    cursor: pointer;
+}
+table th:hover {
+    background-color: #ddd;
+}
+
+/* Style for table cells */
+.table td {
+    padding: 10px;
+    border: 0;
+}
+/* Set specific widths for table columns */
+
+.col1 {
+    min-width: 5%;
+    text-align: center; 
+    vertical-align: middle;
+}
+.col2 {
+    min-width: 10%;
+    text-align: left;
+}
+.col3 {
+    min-width: 10%;
+    text-align: left;
+}
+.col4 {
+    min-width: 40%;
+    text-align: left;
+}
+.col5 {
+    min-width: 10%;
+    text-align: center; 
+    vertical-align: middle;
+}
+.col6 {
+    min-width: 10%;
+    text-align: left;
+}
+.col7 {
+    min-width: 8%;
+    
+    vertical-align: middle;
+}
+.col8{
+    min-width: 5%;
+    text-align: center; 
+    align-items: center;
+    vertical-align: middle;
+}
+
+/* Adaptabilidad para pantallas más pequeñas */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 70%;
+    }
+
+    .content {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .toggle-sidebar {
+        top: 15px;
+        left: 15px;
+        padding: 6px 10px;
+        font-size: 14px;
+    }
+
+    .send-button {
+        margin: 10px 0;
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+}

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incidencias</title>
+    <link rel="stylesheet" href="css/consultas.css">
+    <link rel="icon" type="image/x-icon" href="imgs/PlexCruzIcon.png">
+</head>
+<body>
+    <!-- Botón de alternar la barra lateral -->
+    <button class="toggle-sidebar">☰</button>
+
+    <div class="sidebar">
+        <form class="side-form" id="filter-form" novalidate>
+            <!-- Contenido del formulario -->
+            <div class="form-group">
+                <label for="tipo">Tipo:</label>
+                <select id="tipo" name="tipo">
+                    <option value="pelicula">Películas</option>
+                    <option value="serie">Series</option>
+                    <option value="incidencia">Incidencias</option>
+                    <option value="todo">Todas</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Resueltas:</label>
+                <label><input type="checkbox" name="resueltas" value="si"> Sí</label>
+                <label><input type="checkbox" name="resueltas" value="no"> No</label>
+            </div>
+            <div class="form-group">
+                <label for="previas">Previas a:</label>
+                <input type="date" id="previas" name="previas">
+                <button type="button" class="clear-date" data-target="previas">Limpiar</button>
+            </div>
+            <div class="form-group">
+                <label for="posteriores">Posteriores a:</label>
+                <input type="date" id="posteriores" name="posteriores">
+                <button type="button" class="clear-date" data-target="posteriores">Limpiar</button>
+            </div>
+            <div class="form-group">
+                <button type="submit">Enviar</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="content">
+        <div class="list-container">
+            <table id="dynamic-table" class="table">
+                <thead>
+                    <tr>
+                        <th class="col1" onclick="sortTable(0, this)" id="header-0">Id <span class="arrow" id="arrow-0">▼</span></th>
+                        <th class="col2" onclick="sortTable(1, this)" id="header-1">Nombre <span class="arrow" id="arrow-1">▼</span></th>
+                        <th class="col3" onclick="sortTable(2, this)" id="header-2">Tipo <span class="arrow" id="arrow-2">▼</span></th>
+                        <th class="col4" onclick="sortTable(3, this)" id="header-3">Descripción <span class="arrow" id="arrow-3">▼</span></th>
+                        <th class="col5" onclick="sortTable(4, this)" id="header-4">Temporadas <span class="arrow" id="arrow-4">▼</span></th>
+                        <th class="col6" onclick="sortTable(5, this)" id="header-5">Fecha <span class="arrow" id="arrow-5">▼</span></th>
+                        <th class="col7" onclick="sortTable(6, this)" id="header-6">Resuelta <span class="arrow" id="arrow-6">▼</span></th>
+                        <th class="col8">Listo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dynamic rows will be added here -->
+                </tbody>
+            </table>
+            <button id="send-selected" class="send-button">Enviar Seleccionados</button>
+        </div>
+    </div>
+
+    <script src="js/consultas.js"></script>
+</body>
+</html>

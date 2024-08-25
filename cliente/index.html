@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/main.css">
+    <title>Solicitud películas</title>
+    <link rel="icon" type="image/x-icon" href="imgs/PlexCruzIcon.png">
+</head>
+
+<body>
+    <div class="form-container">
+        <form id="incidencia" action="/submit" method="POST">
+            <h2>Solicitudes películas</h2>
+            <label for="name">Nombre:</label>
+            <input type="text" id="name" name="name" required>
+
+            <label for="requestType">Tipo de solicitud:</label>
+            <select id="requestType" name="requestType" required>
+                <option value="pelicula">Solicitar película</option>
+                <option value="fallo">Reportar fallo</option>
+                <option value="serie">Solicitar serie</option>
+            </select>
+
+            <div id="seasonField" class="hidden">
+                <label for="seasonNumber">Número de temporada:</label>
+                <input type="number" id="seasonNumber" name="seasonNumber" value="0" min="0">
+            </div>
+
+            <label id="descriptionLabel" for="description">Nombre de película:</label>
+            <textarea id="description" name="description" required></textarea>
+
+            <button type="submit">Enviar</button>
+        </form>
+    </div>
+</body>
+<script type="text/javascript" src="js/main.js"></script>
+</html>
