@@ -130,5 +130,5 @@ dist
 .pnp.*
 
 #certs
-.cert
-.key
+*.cert
+*.key
