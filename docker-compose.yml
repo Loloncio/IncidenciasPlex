@@ -1,0 +1,35 @@
+services:
+  web:
+    build: .
+    container_name: incidenciasplex-web
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    env_file: .env
+    environment:
+      # La BD sigue siendo la MariaDB que ya tenéis en el host (no se dockeriza
+      # aquí, para no crear una base de datos nueva y vacía en paralelo a la real).
+      # host.docker.internal apunta al host desde dentro del contenedor.
+      DB_HOST: host.docker.internal
+      HOST: 0.0.0.0
+      PORT: 3002
+    extra_hosts:
+      # host.docker.internal ya funciona solo en Docker Desktop (Windows/Mac);
+      # esta línea es la que lo habilita también en Docker Engine sobre Linux.
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./cert.key:/app/cert.key:ro
+      - ./cert.pem:/app/cert.pem:ro
+    # Nota: dentro de Docker los errores solo van a stdout (`docker logs incidenciasplex-web`),
+    # no a Errores.log — evita el problema de bind-mountear un archivo que igual no existe
+    # todavía (Docker lo crearía como carpeta) y es el sitio natural donde mirar logs en Docker.
+
+  notifier:
+    build: ./notifier
+    container_name: incidenciasplex-notifier
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DB_HOST: host.docker.internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

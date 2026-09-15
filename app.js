@@ -20,10 +20,12 @@ if (missingEnv.length > 0) {
 
 const app = express();
 
-// Función para registrar errores en "Errores.log"
+// Registra errores en stdout (para `docker logs`/journald) y, además, en "Errores.log"
+// para cuando se ejecuta directamente en Windows sin Docker.
 function logError(message) {
-    const logMessage = `[${new Date().toISOString()}] ${message}\n`;
-    fs.appendFile('Errores.log', logMessage, (err) => {
+    const logMessage = `[${new Date().toISOString()}] ${message}`;
+    console.error(logMessage);
+    fs.appendFile('Errores.log', logMessage + '\n', (err) => {
         if (err) {
             console.error("No se pudo escribir en Errores.log:", err);
         }
@@ -224,6 +226,12 @@ app.post('/logout', (req, res) => {
     });
 });
 
+// Comprobación de salud para el HEALTHCHECK de Docker (no depende de la BD a propósito,
+// para no marcar el contenedor como "unhealthy" por una BD lenta en vez de por el propio proceso).
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
+
 // Exponer al cliente el estado de sesión (sin datos sensibles) para adaptar la navegación.
 app.get('/api/session', (req, res) => {
     res.json({
@@ -322,10 +330,24 @@ const options = {
 };
 
 // Creación del servidor HTTPS
-https.createServer(options, app)
+const server = https.createServer(options, app)
   .listen(PORT, HOST, () => {
       console.log(`Servidor HTTPS corriendo en https://${HOST}:${PORT}`);
   });
+
+// Apagado limpio: `docker stop` manda SIGTERM y espera antes de matar el proceso.
+// Sin esto, las conexiones en curso se cortan de golpe y los pools de BD quedan colgando.
+function shutdown(signal) {
+    console.log(`${signal} recibido, cerrando servidor...`);
+    server.close(async () => {
+        await Promise.all([pool.end(), poolLog.end()]);
+        process.exit(0);
+    });
+    // Si algo no cierra a tiempo, no dejamos el contenedor colgado indefinidamente.
+    setTimeout(() => process.exit(1), 10000).unref();
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 
 async function guardaIncidencia(data) {
     let connection;
