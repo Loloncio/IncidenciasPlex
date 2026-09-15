@@ -394,10 +394,10 @@ async function guardaIncidencia(data) {
         connection = await pool.getConnection();
         let resQuery = []
         if(data.requestType === "pelicula"){
-            resQuery = await connection.query('INSERT INTO Form (Usuario, Tipo, Nombre, UserID) VALUES (?,?,?,?)', [data.name, data.requestType, data.description, data.userId]);
+            resQuery = await connection.query('INSERT INTO form (Usuario, Tipo, Nombre, UserID) VALUES (?,?,?,?)', [data.name, data.requestType, data.description, data.userId]);
         }
         else{
-            resQuery = await connection.query('INSERT INTO Form (Usuario, Tipo, Descripcion, UserID) VALUES (?,?,?,?)', [data.name, data.requestType, data.description, data.userId]);
+            resQuery = await connection.query('INSERT INTO form (Usuario, Tipo, Descripcion, UserID) VALUES (?,?,?,?)', [data.name, data.requestType, data.description, data.userId]);
         }
         if (resQuery.affectedRows !== 1) {
             logError("Error al guardar incidencia en DB");
@@ -415,7 +415,7 @@ async function updateConsulta(consulta, valor) {
     try {
         connection = await pool.getConnection();
         let nuevoValor = (valor === "1") ? 0 : 1;
-        await connection.query('UPDATE Form SET Resuelto = ? WHERE ID = ?', [nuevoValor, consulta]);
+        await connection.query('UPDATE form SET Resuelto = ? WHERE ID = ?', [nuevoValor, consulta]);
     } catch (err) {
         logError('Error en updateConsulta: ' + err.stack);
         throw err;
