@@ -4,7 +4,15 @@
 # usando las mismas credenciales que ya tenéis en .env (DB_USER/DB_PWD, DB_USER2/DB_PWD2).
 set -euo pipefail
 
-mysql -u root -p"${MARIADB_ROOT_PASSWORD}" <<-EOSQL
+# Las imágenes de MariaDB 11.x recientes ya no incluyen el binario "mysql" (solo
+# "mariadb"); en versiones más antiguas es al revés. Usamos el que exista.
+if command -v mariadb >/dev/null 2>&1; then
+  CLI=mariadb
+else
+  CLI=mysql
+fi
+
+"$CLI" -u root -p"${MARIADB_ROOT_PASSWORD}" <<-EOSQL
   -- Usuario "web": incidencias/solicitudes (tabla form), lectura del catálogo (newmovies)
   -- y limpieza de la cola de notificaciones (la usa también el servicio notifier).
   CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PWD}';
