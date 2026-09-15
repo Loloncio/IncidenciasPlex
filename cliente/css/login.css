@@ -10,82 +10,80 @@ body {
     right: 0;
     bottom: 0;
     left: 0;
-    background-image: radial-gradient(circle at 30% 86%, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.03) 8%, transparent 8%, transparent 92%), radial-gradient(circle at 55% 100%, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.03) 8%, transparent 8%, transparent 92%), radial-gradient(circle at 40% 75%, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.03) 6%, transparent 6%, transparent 94%), radial-gradient(circle at 7% 99%, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.03) 6%, transparent 6%, transparent 94%), radial-gradient(circle at 69% 76%, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.03) 6%, transparent 6%, transparent 94%), radial-gradient(circle at 2% 35%, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.03) 6%, transparent 6%, transparent 94%), radial-gradient(circle at 14% 48%, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.03) 6%, transparent 6%, transparent 94%), radial-gradient(circle at 28% 87%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.04) 4%, transparent 4%, transparent 96%), radial-gradient(circle at 65% 14%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.04) 4%, transparent 4%, transparent 96%), radial-gradient(circle at 51% 36%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.04) 4%, transparent 4%, transparent 96%), radial-gradient(circle at 6% 93%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.04) 4%, transparent 4%, transparent 96%), linear-gradient(135deg, rgb(23, 233, 173), rgb(29, 24, 208));
+    background: linear-gradient(160deg, #eceef3 0%, var(--color-bg) 55%, #ece7dd 100%);
 }
 
 body {
     display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    margin: 0;
+    background-color: var(--color-bg);
+}
+
+/* #app envuelve la tarjeta de login/registro: ocupa el espacio restante bajo la
+   cabecera y centra la tarjeta dentro de él (la cabecera ya no forma parte de este
+   flex, así que no la arrastra a mitad de página). */
+#app {
+    display: flex;
     align-items: center;
-    padding-top: 40px;
-    padding-bottom: 40px;
-    background-color: #f5f5f5;
+    justify-content: center;
+    flex: 1;
+    padding: 40px 16px;
 }
 
 .form-signin {
     width: 100%;
     max-width: 330px;
     margin: auto;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px); /* WebKit prefix for compatibility */
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-    border-left: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 5px 5px 30px rgba(0, 0, 0, 0.2);
-    border-radius: 3px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-card);
+    border-radius: var(--radius);
+    overflow: hidden;
 
     h1 {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px); /* WebKit prefix for compatibility */
-        border-top: 1px solid rgba(255, 255, 255, 0.2);
-        border-left: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 5px 5px 30px rgba(0, 0, 0, 0.2);
+        background: var(--color-primary);
         margin-top: 0px;
-        border-top-left-radius: 3px;
-        border-top-right-radius: 3px;
         color: #fff;
-        padding: 15px;
+        padding: 18px 15px;
         text-align: center;
     }
 
     form {
-        padding: 15px;
+        padding: 20px;
 
         .btn {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px); /* WebKit prefix for compatibility */
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-            border-left: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 5px 5px 30px rgba(0, 0, 0, 0.2);
+            background: var(--color-primary);
+            border: none;
             color: #fff;
 
             &:hover,
             &:focus {
-                background: rgba(255, 255, 255, 0.1);
-                box-shadow: none;
+                background: var(--color-primary-hover);
             }
         }
 
         .form-control:focus {
-            border-color: #ced4da;
-            box-shadow: 5px 5px 30px rgba(0, 0, 0, 0.2);
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 0.2rem var(--color-primary-soft);
         }
     }
 
     .copyright {
         text-align: center;
-        color: rgba(255, 255, 255, 0.65);
+        color: var(--color-text-muted);
     }
 
     .form-control {
-        background: rgba(255, 255, 255, 0.9);
+        background: var(--color-surface);
+        border-color: var(--color-border);
     }
 
     .form-check {
         display: flex;
         align-items: center;
-        color: rgba(255, 255, 255, 0.65);
+        color: var(--color-text-muted);
 
         label {
             font-size: 0.9em;
@@ -95,8 +93,8 @@ body {
             margin-right: 0.5em;
 
             &:checked {
-                background-color: #9ce060;
-                border-color: #81c63f;
+                background-color: var(--color-primary);
+                border-color: var(--color-primary);
             }
         }
     }

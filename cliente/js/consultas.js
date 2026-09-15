@@ -1,259 +1,166 @@
+const { createApp } = Vue;
 
-const colorMap = {
-    'rgb(255, 0, 0)': '0',
-    'rgb(0, 128, 0)': '1',
+const TIPO_MAPPINGS = {
+    1: { pelicula: 0, fallo: 1, serie: 2 },
+    2: { fallo: 0, serie: 1, pelicula: 2 },
+    3: { serie: 0, pelicula: 1, fallo: 2 },
 };
 
-let tableItems = [];
+createApp({
+    data() {
+        return {
+            items: [],
+            selected: {},
+            filterDraft: { tipo: 'todo', resueltas: [], previas: '', posteriores: '' },
+            appliedFilters: { tipo: 'todo', resueltas: [], previas: '', posteriores: '' },
+            sort: { column: null },
+            // Refleja el atributo `data-sort-order`, compartido entre todas las columnas
+            // salvo "Tipo": cada clic en una columna normal invierte esta única bandera.
+            sortOrderFlag: null,
+            appliedAscending: false,
+            tipoSortState: 1,
+            activeTipoState: 1,
+        };
+    },
+    computed: {
+        filteredItems() {
+            const { tipo, resueltas, previas, posteriores } = this.appliedFilters;
+            const previasDate = previas ? new Date(previas) : null;
+            const posterioresDate = posteriores ? new Date(posteriores) : null;
 
-// Selecciona el botón de alternar y la barra lateral
-const toggleButton = document.querySelector('.toggle-sidebar');
-const sidebar = document.querySelector('.sidebar');
-const content = document.querySelector('.content');
+            return this.items.filter((item) => {
+                let matches = true;
+                const fecha = new Date((item.Fecha || '').slice(0, 10));
 
-// Select the table body and send button
-const tableBody = document.querySelector('#dynamic-table tbody');
-const sendButton = document.querySelector('#send-selected');
-const filterForm = document.querySelector('#filter-form');
-
-// Define the list of items (or data) to be added as rows
-function getDBContents() {
-    fetch('/api/items')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            // Assuming `tableItems` is the variable that will hold your data
-            tableItems = data;
-            // Call the function to create table rows with the data
-            createTableRows(tableItems);
-        })
-        .catch(error => {
-            console.error('There was a problem with the fetch operation:', error);
-        });
-
-
-}
-
-// Function to create and add table rows dynamically
-function createTableRows(contents) {
-    const tbody = document.querySelector('#dynamic-table tbody'); // Selecciona el <tbody> de la tabla
-    tbody.innerHTML = '';
-
-    contents.forEach((item) => {
-        // Create a new row
-        const row = document.createElement('tr');
-        row.className = 'table-row';
-
-        // Create cells for each property
-        const properties = [item.ID,item.Usuario, item.Tipo, item.Descripcion, item.Temporadas, item.Fecha.slice(0, 10), item.Resuelto];
-        cont = 1;
-        properties.forEach(property => {
-            const cell = document.createElement('td');
-            cell.className = "col" + cont;
-            if (cont === 7) {
-                if (property === 1) {
-                    var circle = document.createElement("div");
-                    circle.style.width = "20px"
-                    circle.style.height = "20px"
-                    circle.style.backgroundColor = "green"
-                    circle.style.borderRadius = "50%"
-                    circle.style.margin = "auto"
-                    cell.appendChild(circle)
-                } else {
-                    var circle = document.createElement("div");
-                    circle.style.width = "20px"
-                    circle.style.height = "20px"
-                    circle.style.backgroundColor = "red"
-                    circle.style.borderRadius = "50%"
-                    circle.style.margin = "auto"
-                    cell.appendChild(circle)
+                if (tipo !== 'todo' && item.Tipo !== tipo) {
+                    matches = false;
                 }
-            } else {
-                cell.textContent = property
-            }
-            row.appendChild(cell);
-            cont++;
-        });
 
-        // Create the last cell with a checkbox
-        const checkboxCell = document.createElement('td');
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.value = item.id; // Set the value of the checkbox to item id
-        checkboxCell.appendChild(checkbox);
-        row.appendChild(checkboxCell);
+                if (resueltas.length !== 2) {
+                    if (resueltas.includes('si') && item.Resuelto === 0) {
+                        matches = false;
+                    } else if (resueltas.includes('no') && item.Resuelto === 1) {
+                        matches = false;
+                    }
+                }
 
-        // Handle row click to toggle checkbox
-        row.addEventListener('click', (event) => {
-            if (event.target.type !== 'checkbox') {
-                checkbox.checked = !checkbox.checked;
-            }
-        });
+                if (previasDate && fecha > previasDate) matches = false;
+                if (posterioresDate && fecha < posterioresDate) matches = false;
 
-        // Append the row to the table body
-        tableBody.appendChild(row);
-    });
-}
-
-// Function to collect and send selected items
-function sendSelectedItems() {
-    const selectedItems = {};
-    const checkboxes = document.querySelectorAll('#dynamic-table input[type="checkbox"]:checked');
-
-    checkboxes.forEach(checkbox => {
-        const row = checkbox.closest('tr'); // Find the closest row <tr> for the checkbox
-        const firstColumnValue = row.querySelector('td:nth-child(1)').textContent.trim(); // Get the value of the first <td>
-        const seventhColumnDiv = row.querySelector('td:nth-child(7) div'); // Get the <div> in the seventh <td>
-        const divColor = window.getComputedStyle(seventhColumnDiv).backgroundColor;
-        const color = colorMap[divColor];
-        // Create a dictionary entry with the first column as the key and the seventh column as the value
-        selectedItems[firstColumnValue] = color;
-    });
-
-    if (Object.keys(selectedItems).length > 0) {
-        fetch('/completar-consultas', { // Replace with your server URL
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ selectedItems })
-        })
-            .then(response => response.json())
-            .then(data => {
-                tableItems = data
-                createTableRows(tableItems);
-            })
-            .catch(error => {
-                console.error('Error:', error);
+                return matches;
             });
-    } else {
-        alert('No hay elementos seleccionados para enviar.');
-    }
-}
+        },
+        sortedItems() {
+            const items = [...this.filteredItems];
+            const column = this.sort.column;
+            if (column === null) return items;
 
-// Handle form submission to prevent page reload
-filterForm.addEventListener('submit', function(event) {
-    event.preventDefault(); // Prevents the form from submitting the traditional way
-
-    // Create a FormData object from the form
-    const formData = new FormData(this);
-
-    // Convert FormData to a regular object
-    tipo = formData.get("tipo");
-    resuelta = formData.getAll("resueltas");
-    console.log(resuelta)
-    previas = formData.get("previas");
-    posteriores = formData.get("posteriores");
-    const filteredItems = filterTableItems(tableItems, tipo, resuelta, previas, posteriores);
-    createTableRows(filteredItems)
-
-});
-
-/**
- * Filters tableItems based on the provided form data.
- * @param {Array} tableItems - The array of items to filter.
- * @param {string} tipo - The selected type from the form.
- * @param {Array} resuelta - The selected resolved statuses from the form.
- * @param {string} previas - The date to filter items before.
- * @param {string} posteriores - The date to filter items after.
- * @returns {Array} - The filtered array of items.
- */
-function filterTableItems(tableItems, tipo, resuelta, previas, posteriores) {
-    // Convert dates from strings to Date objects for comparison
-    const previasDate = previas ? new Date(previas) : null;
-    const posterioresDate = posteriores ? new Date(posteriores) : null;
-    
-    return tableItems.filter(item => {
-        let matches = true;
-        let fecha = new Date(item.Fecha.slice(0, 10));
-        // Check tipo
-        if(tipo!="todo"){
-            if (tipo && item.Tipo !== tipo) {
-                matches = false;
+            if (column === 2) {
+                const mapping = TIPO_MAPPINGS[this.activeTipoState];
+                return items.sort((a, b) => {
+                    const aRank = mapping[a.Tipo] ?? 999;
+                    const bRank = mapping[b.Tipo] ?? 999;
+                    return aRank - bRank;
+                });
             }
-        }
 
-        // Check resuelta (resolved status)
-        if(resuelta.length!=2){
-            if (resuelta.includes("si") && item.Resuelto === 0) {
-                matches = false;
-            } else if (resuelta.includes("no") && item.Resuelto === 1){
-                matches = false;
+            const ascending = this.appliedAscending;
+
+            if (column === 6) {
+                return items.sort((a, b) => {
+                    const aVal = parseInt(a.Resuelto) || 0;
+                    const bVal = parseInt(b.Resuelto) || 0;
+                    return ascending ? aVal - bVal : bVal - aVal;
+                });
             }
-        }
-        
-        // Check previas (before date)
-        if (previasDate && fecha > previasDate) {
-            matches = false;
-        }
 
-        // Check posteriores (after date)
-        if (posterioresDate && fecha < posterioresDate) {
-            matches = false;
-        }
-        return matches;
-    });
-}
-const clearDateButtons = document.querySelectorAll('.clear-date');
+            const fieldMap = { 0: 'ID', 1: 'Usuario', 3: 'Nombre', 4: 'Descripcion' };
+            return items.sort((a, b) => {
+                let aText, bText;
+                if (column === 5) {
+                    aText = (a.Fecha || '').slice(0, 10);
+                    bText = (b.Fecha || '').slice(0, 10);
+                } else {
+                    const field = fieldMap[column];
+                    aText = String(a[field] ?? '');
+                    bText = String(b[field] ?? '');
+                }
+                if (aText < bText) return ascending ? -1 : 1;
+                if (aText > bText) return ascending ? 1 : -1;
+                return 0;
+            });
+        },
+    },
+    methods: {
+        async loadItems() {
+            try {
+                const response = await fetch('/api/items');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                this.items = await response.json();
+            } catch (error) {
+                console.error('There was a problem with the fetch operation:', error);
+            }
+        },
+        applyFilters() {
+            this.appliedFilters = {
+                tipo: this.filterDraft.tipo,
+                resueltas: [...this.filterDraft.resueltas],
+                previas: this.filterDraft.previas,
+                posteriores: this.filterDraft.posteriores,
+            };
+        },
+        sortTable(columnIndex) {
+            if (columnIndex === 2) {
+                this.activeTipoState = this.tipoSortState;
+                this.tipoSortState = this.tipoSortState >= 3 ? 1 : this.tipoSortState + 1;
+                this.sort.column = 2;
+                return;
+            }
+            const isAscending = this.sortOrderFlag === 'asc';
+            this.appliedAscending = isAscending;
+            this.sort.column = columnIndex;
+            this.sortOrderFlag = isAscending ? 'desc' : 'asc';
+        },
+        headerArrow(colIndex) {
+            if (colIndex !== this.sort.column) return '▼';
+            return this.sortOrderFlag === 'asc' ? '▲' : '▼';
+        },
+        toggleRow(id, event) {
+            if (event.target.type === 'checkbox') return;
+            this.selected[id] = !this.selected[id];
+        },
+        async sendSelectedItems() {
+            const selectedIds = Object.entries(this.selected)
+                .filter(([, checked]) => checked)
+                .map(([id]) => id);
 
-    // Function to clear the date input field
-    function clearDateInput(event) {
-        const targetId = event.target.getAttribute('data-target');
-        const targetInput = document.getElementById(targetId);
-        if (targetInput) {
-            targetInput.value = ''; // Clear the date field
-        }
-    }
+            if (selectedIds.length === 0) {
+                alert('No hay elementos seleccionados para enviar.');
+                return;
+            }
 
-    // Add event listeners to clear date buttons
-    clearDateButtons.forEach(button => {
-        button.addEventListener('click', clearDateInput);
-});
-function sortTable(columnIndex, headerElement) {
-    const table = document.getElementById("dynamic-table");
-    const tbody = table.getElementsByTagName("tbody")[0];
-    const rows = Array.from(tbody.getElementsByTagName("tr"));
-    const isAscending = table.getAttribute('data-sort-order') === 'asc';
-    
-    // Sort rows
-    rows.sort((a, b) => {
-        const aText = a.getElementsByTagName("td")[columnIndex].innerText;
-        const bText = b.getElementsByTagName("td")[columnIndex].innerText;
-        
-        if (aText < bText) return isAscending ? -1 : 1;
-        if (aText > bText) return isAscending ? 1 : -1;
-        return 0;
-    });
-    
-    // Clear the table body and append sorted rows
-    tbody.innerHTML = "";
-    rows.forEach(row => tbody.appendChild(row));
+            const selectedItems = {};
+            selectedIds.forEach((id) => {
+                const item = this.items.find((i) => String(i.ID) === String(id));
+                if (item) selectedItems[id] = String(item.Resuelto);
+            });
 
-    // Update sort order
-    table.setAttribute('data-sort-order', isAscending ? 'desc' : 'asc');
-
-    // Reset arrows and header styles
-    const headers = table.getElementsByTagName("th");
-    Array.from(headers).forEach(header => {
-        const arrow = header.getElementsByClassName('arrow')[0];
-        if (arrow) arrow.textContent = '▼'; // Reset arrow to down
-        header.style.backgroundColor = "#f4f4f4"; // Reset header class
-    });
-
-    // Update arrow and header style for the current column
-    const arrow = headerElement.getElementsByClassName('arrow')[0];
-    if (arrow) arrow.textContent = isAscending ? '▲' : '▼';
-    console.log(isAscending)
-    headerElement.style.backgroundColor = isAscending ? "#8efda8": "#ff8791";
-    
-}
-
-// Add event listener to the send button
-sendButton.addEventListener('click', sendSelectedItems);
-
-// Create the table rows on page load
-window.addEventListener('load', getDBContents);
+            try {
+                const response = await fetch('/completar-consultas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ selectedItems }),
+                });
+                this.items = await response.json();
+                this.selected = {};
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        },
+    },
+    mounted() {
+        this.loadItems();
+    },
+}).mount('#app');

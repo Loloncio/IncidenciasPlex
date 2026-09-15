@@ -7,19 +7,8 @@
         integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/login.css">
-  <title>Login admin</title>
+  <title>Crear cuenta</title>
   <link rel="icon" type="image/png" href="imgs/favicon.png">
-  <!-- CSS para mostrar la X roja en los inputs inválidos -->
-  <style>
-        .invalid-feedback {
-          background-color: #fff; /* Fondo blanco para mayor contraste */
-          border-color: #dc3545; /* Borde rojo de Bootstrap para inputs inválidos */
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 18L18 6M6 6l12 12'/%3E%3C/svg%3E");
-          background-repeat: no-repeat;
-          background-position: right calc(0.375em + 0.1875rem) center;
-          background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
-        }
-  </style>
 </head>
 <body>
   <header id="site-header-app" class="site-header">
@@ -42,24 +31,24 @@
   <div id="app">
     <div class="bg"></div>
     <main class="form-signin">
-      <h1 class="h3">Inicio de sesión</h1>
-      <form id="login" @submit.prevent="onSubmit" novalidate>
+      <h1 class="h3">Crear cuenta</h1>
+      <form id="signup" @submit.prevent="onSubmit" novalidate>
         <div class="form-floating mb-3">
-          <input type="text" class="form-control" :class="{ 'is-invalid': error }" id="floatingInput"
-                 v-model="usuario" placeholder="Usuario" required>
+          <input type="text" class="form-control" id="floatingInput" v-model="usuario" placeholder="Usuario" required minlength="3" maxlength="50">
           <label for="floatingInput">Usuario</label>
         </div>
         <div class="form-floating mb-3">
-          <input type="password" class="form-control" :class="{ 'is-invalid': error }" id="floatingPassword"
-                 v-model="password" placeholder="Contraseña" required>
-          <label for="floatingPassword">Contraseña</label>
-          <div class="invalid-feedback">
-            Esa combinación de usuario y contraseña es incorrecta.
-          </div>
+          <input type="password" class="form-control" id="floatingPassword" v-model="password" placeholder="Contraseña" required minlength="8">
+          <label for="floatingPassword">Contraseña (mínimo 8 caracteres)</label>
         </div>
-        <button class="w-100 btn btn-lg" type="submit" :disabled="submitting">Iniciar sesión</button>
+        <div class="form-floating mb-3">
+          <input type="password" class="form-control" id="floatingPasswordConfirm" v-model="passwordConfirm" placeholder="Repite la contraseña" required minlength="8">
+          <label for="floatingPasswordConfirm">Repite la contraseña</label>
+        </div>
+        <div class="text-danger small mb-3" v-if="error">{{ error }}</div>
+        <button class="w-100 btn btn-lg" type="submit" :disabled="submitting">Crear cuenta</button>
         <p class="copyright mt-3 mb-0">
-          <a href="/registrarse">¿No tienes cuenta? Regístrate</a>
+          <a href="/login">Ya tengo cuenta, iniciar sesión</a>
         </p>
       </form>
     </main>
@@ -70,6 +59,6 @@
           integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
           crossorigin="anonymous"></script>
   <script src="js/header.js"></script>
-  <script src="js/login.js"></script>
+  <script src="js/registrarse.js"></script>
 </body>
 </html>

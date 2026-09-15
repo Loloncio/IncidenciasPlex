@@ -1,38 +1,64 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/theme.css">
     <link rel="stylesheet" href="css/main.css">
     <title>Solicitud películas</title>
-    <link rel="icon" type="image/x-icon" href="imgs/PlexCruzIcon.png">
+    <link rel="icon" type="image/png" href="imgs/favicon.png">
 </head>
 
 <body>
-    <div class="form-container">
-        <form id="incidencia" action="/submit" method="POST">
-            <h2>Solicitudes películas</h2>
-            <label for="name">Nombre:</label>
-            <input type="text" id="name" name="name" required>
+    <header id="site-header-app" class="site-header">
+        <a href="/" class="site-header__brand">
+            <img src="imgs/logo-header.png" alt="lolo-labs" class="site-header__logo">
+        </a>
+        <nav class="site-header__nav">
+            <template v-if="session.rol === 'admin'">
+                <a class="nav-button" href="https://emule.lolo-labs.com">eMule</a>
+                <a class="nav-button" href="https://torrent.lolo-labs.com" target="_blank">Torrent</a>
+                <a class="nav-button" href="/consultas">Consultas</a>
+                <a class="nav-button" href="/registro">Registro</a>
+            </template>
+            <a v-if="!session.loggedin" class="nav-button" href="/login">Iniciar sesión</a>
+            <a v-else-if="session.rol !== 'admin'" class="nav-button" href="/mis-solicitudes">Mis solicitudes</a>
+            <button v-if="session.loggedin" type="button" class="nav-button nav-button--ghost" @click="logout">Cerrar sesión</button>
+        </nav>
+    </header>
 
-            <label for="requestType">Tipo de solicitud:</label>
-            <select id="requestType" name="requestType" required>
-                <option value="pelicula">Solicitar película</option>
-                <option value="fallo">Reportar fallo</option>
-                <option value="serie">Solicitar serie</option>
-            </select>
+    <div id="app">
+        <!-- Contenido centrado (formulario) -->
+        <div class="content">
+            <div class="form-container">
+                <form id="incidencia" @submit.prevent="submitForm">
+                    <h2>Solicitudes películas</h2>
+                    <label for="name">Nombre:</label>
+                    <input type="text" id="name" v-model="name" required>
 
-            <div id="seasonField" class="hidden">
-                <label for="seasonNumber">Número de temporada:</label>
-                <input type="number" id="seasonNumber" name="seasonNumber" value="0" min="0">
+                    <label for="requestType">Tipo de solicitud:</label>
+                    <select id="requestType" v-model="requestType" required>
+                        <option value="pelicula">Solicitar película</option>
+                        <option value="fallo">Reportar fallo</option>
+                    </select>
+
+                    <label id="descriptionLabel" for="description">{{ descriptionLabel }}</label>
+                    <textarea id="description" v-model="description" required></textarea>
+
+                    <button type="submit" :disabled="submitting">Enviar</button>
+                </form>
+                <div id="messageContainer" :style="{ color: messageColor, marginTop: message ? '10px' : '0' }">{{ message }}</div>
             </div>
-
-            <label id="descriptionLabel" for="description">Nombre de película:</label>
-            <textarea id="description" name="description" required></textarea>
-
-            <button type="submit">Enviar</button>
-        </form>
+            <div class="info-box" id="info-box" v-show="requestType === 'fallo'">
+                Para solucionar mejor la incidencia por favor pon el nombre de la película que falla, qué es lo que falla (no se reproduce, se ve mal, la carátula está mal...) y si sale algún mensaje de error apuntalo también.
+            </div>
+        </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.21/dist/vue.global.prod.js"></script>
+    <script src="js/header.js"></script>
+    <script type="text/javascript" src="js/main.js"></script>
 </body>
-<script type="text/javascript" src="js/main.js"></script>
+
 </html>

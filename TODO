@@ -1,0 +1,20 @@
+Añadir el campo pelicula/serie al formulario web
+Añadir el nombre a la tabla de visualización
+
+Android:
+    - Adaptabilidad
+    - Estilo
+    - Modo claro y oscuro
+    - Filtros por fecha
+        - Falta añadir comprobacion o restriccion de que fecha antes de sea maximo hoy y que despues de sea despues de antes de
+        - Añadir botones de reset
+        - Aplicar el filtro
+    - Ordenar por:
+        - Mas reciente
+        - Mas antiguo
+        - Tipo
+        - Resueltas primero
+        - No resueltas primero
+        - Alfabetico
+
+Arreglar Nginx y los certificados

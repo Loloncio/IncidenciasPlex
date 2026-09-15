@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mis solicitudes</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="imgs/favicon.png" />
+  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/consultas.css" />
+</head>
+
+<body class="bg-light">
+  <header id="site-header-app" class="site-header">
+    <a href="/" class="site-header__brand">
+      <img src="imgs/logo-header.png" alt="lolo-labs" class="site-header__logo">
+    </a>
+    <nav class="site-header__nav">
+      <template v-if="session.rol === 'admin'">
+        <a class="nav-button" href="https://emule.lolo-labs.com">eMule</a>
+        <a class="nav-button" href="https://torrent.lolo-labs.com" target="_blank">Torrent</a>
+        <a class="nav-button" href="/consultas">Consultas</a>
+        <a class="nav-button" href="/registro">Registro</a>
+      </template>
+      <a v-if="!session.loggedin" class="nav-button" href="/login">Iniciar sesión</a>
+      <a v-else-if="session.rol !== 'admin'" class="nav-button" href="/mis-solicitudes">Mis solicitudes</a>
+      <button v-if="session.loggedin" type="button" class="nav-button nav-button--ghost" @click="logout">Cerrar sesión</button>
+    </nav>
+  </header>
+
+  <div id="app">
+    <div class="container-fluid p-0">
+      <div class="container-fluid mt-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="h5 mb-0">Mis solicitudes</h2>
+          <a href="/" class="btn btn-primary btn-sm">+ Nueva solicitud</a>
+        </div>
+        <p v-if="!loading && items.length === 0" class="text-muted">Todavía no has enviado ninguna solicitud o incidencia.</p>
+        <div class="table-responsive" v-else>
+          <table class="table table-hover table-bordered">
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Detalle</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in items" :key="item.ID">
+                <td class="text-capitalize">{{ item.Tipo }}</td>
+                <td>{{ item.Nombre || item.Descripcion }}</td>
+                <td>{{ (item.Fecha || '').slice(0, 10) }}</td>
+                <td>
+                  <span class="badge" :class="parseInt(item.Resuelto) === 1 ? 'bg-success' : 'bg-secondary'">
+                    {{ parseInt(item.Resuelto) === 1 ? 'Resuelta' : 'Pendiente' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.4.21/dist/vue.global.prod.js"></script>
+  <script src="js/header.js"></script>
+  <script src="js/mis-solicitudes.js"></script>
+</body>
+
+</html>
