@@ -3,7 +3,7 @@ const mariadb = require('mariadb');
 const session = require("express-session");
 const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
-const https = require('https');
+const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const bodyParser = require('body-parser');
@@ -19,6 +19,13 @@ if (missingEnv.length > 0) {
 }
 
 const app = express();
+
+// Solo confiar en las cabeceras X-Forwarded-* (IP real, proto) cuando de verdad hay un
+// reverse proxy delante — si no, cualquiera podría falsificarlas directamente.
+// Actívalo (TRUST_PROXY=1) cuando pongas el reverse proxy delante de la app.
+if (process.env.TRUST_PROXY) {
+    app.set('trust proxy', 1);
+}
 
 // Registra errores en stdout (para `docker logs`/journald) y, además, en "Errores.log"
 // para cuando se ejecuta directamente en Windows sin Docker.
@@ -63,7 +70,11 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: true,
+      // true por defecto: así se comporta en producción, detrás del reverse proxy con TLS.
+      // Si pruebas en local sin proxy delante y no es vía "localhost" (p.ej. una IP de LAN),
+      // los navegadores no admiten cookies Secure sobre HTTP plano: pon COOKIE_SECURE=false
+      // temporalmente para esas pruebas.
+      secure: process.env.COOKIE_SECURE !== 'false',
       maxAge: 1000 * 60 * 60 * 24 * 14
     }
 }));
@@ -323,16 +334,11 @@ app.get('/api/registro', requireAdmin, async (req, res) => {
         res.status(500).send('Error al obtener incidencias');
     }
 });
-// Opciones del servidor HTTPS
-const options = {
-    key: fs.readFileSync(path.join(__dirname, 'cert.key')),
-    cert: fs.readFileSync(path.join(__dirname, 'cert.pem'))
-};
-
-// Creación del servidor HTTPS
-const server = https.createServer(options, app)
+// Servidor HTTP plano: el TLS lo termina el reverse proxy delante de la app,
+// que reenvía aquí por HTTP dentro de la red interna.
+const server = http.createServer(app)
   .listen(PORT, HOST, () => {
-      console.log(`Servidor HTTPS corriendo en https://${HOST}:${PORT}`);
+      console.log(`Servidor HTTP corriendo en http://${HOST}:${PORT}`);
   });
 
 // Apagado limpio: `docker stop` manda SIGTERM y espera antes de matar el proceso.

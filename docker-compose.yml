@@ -17,12 +17,10 @@ services:
       # host.docker.internal ya funciona solo en Docker Desktop (Windows/Mac);
       # esta línea es la que lo habilita también en Docker Engine sobre Linux.
       - "host.docker.internal:host-gateway"
-    volumes:
-      - ./cert.key:/app/cert.key:ro
-      - ./cert.pem:/app/cert.pem:ro
     # Nota: dentro de Docker los errores solo van a stdout (`docker logs incidenciasplex-web`),
-    # no a Errores.log — evita el problema de bind-mountear un archivo que igual no existe
-    # todavía (Docker lo crearía como carpeta) y es el sitio natural donde mirar logs en Docker.
+    # no a Errores.log — es el sitio natural donde mirar logs en Docker.
+    # La app sirve HTTP plano (sin certs): el TLS lo pondrá el reverse proxy delante,
+    # que reenviará aquí. Cuando lo montes, añade TRUST_PROXY=1 al .env de este servicio.
 
   notifier:
     build: ./notifier
