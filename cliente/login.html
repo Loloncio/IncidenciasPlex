@@ -57,6 +57,10 @@
             Esa combinación de usuario y contraseña es incorrecta.
           </div>
         </div>
+        <div class="form-check mb-3">
+          <input type="checkbox" class="form-check-input" id="recordar" v-model="recordar">
+          <label class="form-check-label" for="recordar">Mantener la sesión iniciada 30 días</label>
+        </div>
         <button class="w-100 btn btn-lg" type="submit" :disabled="submitting">Iniciar sesión</button>
         <p class="copyright mt-3 mb-0">
           <a href="/registrarse">¿No tienes cuenta? Regístrate</a>

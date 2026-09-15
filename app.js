@@ -181,6 +181,12 @@ app.post('/log', loginLimiter, async function (request, response) {
                 request.session.username = username;
                 request.session.userId = user.ID;
                 request.session.rol = user.rol;
+                if (request.body.recordar) {
+                    request.session.cookie.maxAge = 1000 * 60 * 60 * 24 * 30; // 30 días
+                } else {
+                    // Cookie de sesión: desaparece al cerrar el navegador, sin fecha de expiración fija.
+                    request.session.cookie.expires = false;
+                }
                 response.status(200).json({ rol: user.rol });
             } else {
                 response.status(401).json({error:'Incorrect Username and/or Password!'});

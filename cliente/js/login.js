@@ -5,6 +5,7 @@ createApp({
         return {
             usuario: '',
             password: '',
+            recordar: false,
             error: false,
             submitting: false,
         };
@@ -21,7 +22,7 @@ createApp({
                 const response = await fetch('/log', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ usuario: this.usuario, password: this.password }),
+                    body: JSON.stringify({ usuario: this.usuario, password: this.password, recordar: this.recordar }),
                 });
 
                 if (response.ok) {
