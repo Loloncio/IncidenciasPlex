@@ -1,33 +1,62 @@
 services:
+  mariadb:
+    image: mariadb:11.4
+    container_name: incidenciasplex-db
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PWD}
+      MARIADB_DATABASE: pelis
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db/01-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./db/02-users.sh:/docker-entrypoint-initdb.d/02-users.sh:ro
+    ports:
+      # Solo para poder conectar con HeidiSQL/etc. desde el propio host mientras
+      # administras la BD. Quita este bloque si no lo necesitas.
+      - "127.0.0.1:3307:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
   web:
     build: .
     container_name: incidenciasplex-web
     restart: unless-stopped
+    depends_on:
+      mariadb:
+        condition: service_healthy
     ports:
-      - "3002:3002"
+      # Solo accesible desde el propio host (127.0.0.1), no desde la LAN ni internet.
+      # Cuando montes el reverse proxy, será él quien hable con este puerto.
+      - "127.0.0.1:3002:3002"
     env_file: .env
     environment:
-      # La BD sigue siendo la MariaDB que ya tenéis en el host (no se dockeriza
-      # aquí, para no crear una base de datos nueva y vacía en paralelo a la real).
-      # host.docker.internal apunta al host desde dentro del contenedor.
-      DB_HOST: host.docker.internal
+      DB_HOST: mariadb
+      # En minúscula a propósito: MariaDB en Linux distingue mayúsculas en nombres de BD
+      # (a diferencia de Windows) y el esquema se crea como `pelis`, no `Pelis`.
+      DB_DB: pelis
       HOST: 0.0.0.0
       PORT: 3002
-    extra_hosts:
-      # host.docker.internal ya funciona solo en Docker Desktop (Windows/Mac);
-      # esta línea es la que lo habilita también en Docker Engine sobre Linux.
-      - "host.docker.internal:host-gateway"
     # Nota: dentro de Docker los errores solo van a stdout (`docker logs incidenciasplex-web`),
     # no a Errores.log — es el sitio natural donde mirar logs en Docker.
     # La app sirve HTTP plano (sin certs): el TLS lo pondrá el reverse proxy delante,
-    # que reenviará aquí. Cuando lo montes, añade TRUST_PROXY=1 al .env de este servicio.
+    # que reenviará aquí.
 
   notifier:
     build: ./notifier
     container_name: incidenciasplex-notifier
     restart: unless-stopped
+    depends_on:
+      mariadb:
+        condition: service_healthy
     env_file: .env
     environment:
-      DB_HOST: host.docker.internal
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      DB_HOST: mariadb
+      DB_DB: pelis
+
+volumes:
+  db_data:

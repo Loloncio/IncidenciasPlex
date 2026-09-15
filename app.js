@@ -20,12 +20,12 @@ if (missingEnv.length > 0) {
 
 const app = express();
 
-// Solo confiar en las cabeceras X-Forwarded-* (IP real, proto) cuando de verdad hay un
-// reverse proxy delante — si no, cualquiera podría falsificarlas directamente.
-// Actívalo (TRUST_PROXY=1) cuando pongas el reverse proxy delante de la app.
-if (process.env.TRUST_PROXY) {
-    app.set('trust proxy', 1);
-}
+// Confía en la cabecera X-Forwarded-* del último salto: necesario para que
+// express-rate-limit identifique bien la IP real (si no, lanza ERR_ERL_UNEXPECTED_X_FORWARDED_FOR
+// en cuanto algo delante de la app añade esa cabecera, como hace el propio Docker Desktop
+// en su reenvío de puertos). Es seguro porque el puerto solo se publica en 127.0.0.1
+// (ver docker-compose.yml) y, más adelante, porque el reverse proxy será el único camino de entrada.
+app.set('trust proxy', 1);
 
 // Registra errores en stdout (para `docker logs`/journald) y, además, en "Errores.log"
 // para cuando se ejecuta directamente en Windows sin Docker.
@@ -334,17 +334,50 @@ app.get('/api/registro', requireAdmin, async (req, res) => {
         res.status(500).send('Error al obtener incidencias');
     }
 });
+// Crea la cuenta admin inicial si no existe ninguna con ese usuario. Solo actúa si
+// ADMIN_USER/ADMIN_PASSWORD están definidas (pensado para el primer arranque en un
+// despliegue nuevo, p.ej. Docker con una BD recién creada); si ya existe, no hace nada.
+async function seedAdminUser() {
+    const adminUser = process.env.ADMIN_USER;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (!adminUser || !adminPassword) {
+        return;
+    }
+    let connection;
+    try {
+        connection = await poolLog.getConnection();
+        const existing = await connection.query('SELECT ID FROM usuarios WHERE usuario = ?', [adminUser]);
+        if (existing.length > 0) {
+            return;
+        }
+        const hash = await bcrypt.hash(adminPassword, 10);
+        await connection.query('INSERT INTO usuarios (usuario, pass, rol) VALUES (?, ?, ?)', [adminUser, hash, 'admin']);
+        console.log(`Cuenta admin "${adminUser}" creada en el primer arranque.`);
+    } catch (err) {
+        logError('Error en seedAdminUser: ' + err.stack);
+    } finally {
+        if (connection) connection.end();
+    }
+}
+
 // Servidor HTTP plano: el TLS lo termina el reverse proxy delante de la app,
 // que reenvía aquí por HTTP dentro de la red interna.
-const server = http.createServer(app)
-  .listen(PORT, HOST, () => {
-      console.log(`Servidor HTTP corriendo en http://${HOST}:${PORT}`);
-  });
+let server;
+(async () => {
+    await seedAdminUser();
+    server = http.createServer(app).listen(PORT, HOST, () => {
+        console.log(`Servidor HTTP corriendo en http://${HOST}:${PORT}`);
+    });
+})();
 
 // Apagado limpio: `docker stop` manda SIGTERM y espera antes de matar el proceso.
 // Sin esto, las conexiones en curso se cortan de golpe y los pools de BD quedan colgando.
 function shutdown(signal) {
     console.log(`${signal} recibido, cerrando servidor...`);
+    if (!server) {
+        // La señal llegó mientras aún se creaba la cuenta admin, antes de arrancar a escuchar.
+        process.exit(0);
+    }
     server.close(async () => {
         await Promise.all([pool.end(), poolLog.end()]);
         process.exit(0);
