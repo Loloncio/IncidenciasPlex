@@ -125,6 +125,16 @@ a {
 }
 
 .nav-button {
+    /* Reset de los estilos por defecto del navegador para <button>, que si no
+       quedan más anchos/altos que los <a> con la misma clase y rompen el flex
+       de la cabecera a una segunda línea (les falta el "margin: 0" y heredar
+       fuente/línea, que los <a> ya traen implícitamente). */
+    appearance: none;
+    margin: 0;
+    line-height: 1.3;
+    white-space: nowrap;
+    flex-shrink: 0;
+
     display: inline-block;
     text-decoration: none;
     text-align: center;
