@@ -103,6 +103,19 @@ createApp({
             const year = date.getFullYear();
             return `${day}/${month}/${year}`;
         },
+        async deleteItem(id) {
+            if (!confirm('¿Seguro que quieres borrar esta entrada?')) return;
+            try {
+                const response = await fetch(`/api/registro/${id}`, { method: 'DELETE' });
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                this.items = this.items.filter((item) => item.Id !== id);
+            } catch (error) {
+                console.error('Error al borrar:', error);
+                alert('No se ha podido borrar la entrada.');
+            }
+        },
     },
     mounted() {
         this.loadItems();

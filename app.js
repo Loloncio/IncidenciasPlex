@@ -333,12 +333,48 @@ app.get('/api/items', requireAdmin, async (req, res) => {
     }
 });
 
+app.delete('/api/items/:id', requireAdmin, async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isInteger(id)) {
+        return res.status(400).json({ error: 'ID no válido' });
+    }
+    let connection;
+    try {
+        connection = await pool.getConnection();
+        await connection.query('DELETE FROM `pelis`.`form` WHERE ID = ?', [id]);
+        res.status(200).json({ mensaje: 'Incidencia borrada' });
+    } catch (err) {
+        logError('Error en DELETE /api/items/:id: ' + err.stack);
+        res.status(500).json({ error: 'Error al borrar la incidencia' });
+    } finally {
+        if (connection) connection.end();
+    }
+});
+
 app.get('/api/registro', requireAdmin, async (req, res) => {
     try {
         await sendRegistro(res);
     } catch (err) {
         logError('Error en /api/registro: ' + err.stack);
         res.status(500).send('Error al obtener incidencias');
+    }
+});
+
+app.delete('/api/registro/:id', requireAdmin, async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isInteger(id)) {
+        return res.status(400).json({ error: 'ID no válido' });
+    }
+    let connection;
+    try {
+        connection = await pool.getConnection();
+        await connection.query('DELETE FROM `pelis`.`newmovies` WHERE Id = ?', [id]);
+        res.status(200).json({ mensaje: 'Registro borrado' });
+    } catch (err) {
+        logError('Error en DELETE /api/registro/:id: ' + err.stack);
+        res.status(500).json({ error: 'Error al borrar el registro' });
+    } finally {
+        if (connection) connection.end();
     }
 });
 

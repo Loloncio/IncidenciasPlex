@@ -122,6 +122,7 @@
                     Resuelta <span class="arrow">{{ headerArrow(6) }}</span>
                   </th>
                   <th class="col8">Listo</th>
+                  <th class="col8">Borrar</th>
                 </tr>
               </thead>
 
@@ -145,6 +146,9 @@
                   </td>
                   <td class="col8">
                     <input type="checkbox" v-model="selected[item.ID]" @click.stop />
+                  </td>
+                  <td class="col8">
+                    <button type="button" class="btn btn-danger btn-sm" @click.stop="deleteItem(item.ID)">🗑</button>
                   </td>
                 </tr>
               </tbody>

@@ -104,14 +104,18 @@
               <th @click="sortTable(1)" :class="headerClass(1)">Nombre nuevo</th>
               <th @click="sortTable(2)" :class="headerClass(2)">Animada</th>
               <th @click="sortTable(3)" :class="headerClass(3)">Fecha</th>
+              <th>Borrar</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(item, index) in sortedItems" :key="index" :class="{ 'table-danger': parseInt(item.Result) === 0 }">
+            <tr v-for="item in sortedItems" :key="item.Id" :class="{ 'table-danger': parseInt(item.Result) === 0 }">
               <td>{{ item.OriginalName }}</td>
               <td>{{ item.NewName }}</td>
               <td>{{ parseInt(item.Animation) === 0 ? 'No' : 'Si' }}</td>
               <td>{{ formatDate(item.Fecha) }}</td>
+              <td>
+                <button type="button" class="btn btn-danger btn-sm" @click="deleteItem(item.Id)">🗑</button>
+              </td>
             </tr>
           </tbody>
         </table>

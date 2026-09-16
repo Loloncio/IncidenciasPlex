@@ -131,6 +131,20 @@ createApp({
             if (event.target.type === 'checkbox') return;
             this.selected[id] = !this.selected[id];
         },
+        async deleteItem(id) {
+            if (!confirm('¿Seguro que quieres borrar esta entrada?')) return;
+            try {
+                const response = await fetch(`/api/items/${id}`, { method: 'DELETE' });
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                this.items = this.items.filter((item) => item.ID !== id);
+                delete this.selected[id];
+            } catch (error) {
+                console.error('Error al borrar:', error);
+                alert('No se ha podido borrar la entrada.');
+            }
+        },
         async sendSelectedItems() {
             const selectedIds = Object.entries(this.selected)
                 .filter(([, checked]) => checked)
