@@ -456,11 +456,12 @@ app.get('/api/tabla-pendientes', async (req, res) => {
 <meta http-equiv="refresh" content="60">
 <style>
   :root { color-scheme: dark; }
-  html, body { background: transparent; }
+  html, body { background: transparent; height: 100%; }
   body {
     margin: 0; padding: 12px; box-sizing: border-box;
     font-family: -apple-system, system-ui, "Segoe UI", sans-serif;
     color: #e9ecef; font-size: 13px;
+    display: flex;
   }
   .card {
     background: rgba(13, 15, 20, 0.78);
@@ -469,11 +470,19 @@ app.get('/api/tabla-pendientes', async (req, res) => {
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 14px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column;
     overflow: hidden;
   }
+  .table-wrap { flex: 1; min-height: 0; overflow-y: auto; }
+  .table-wrap::-webkit-scrollbar { width: 8px; }
+  .table-wrap::-webkit-scrollbar-track { background: transparent; }
+  .table-wrap::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 8px; }
   table { width: 100%; border-collapse: collapse; }
   th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
   th {
+    position: sticky; top: 0;
+    background: rgba(13, 15, 20, 0.95);
     color: #8b8d94; font-weight: 600; text-transform: uppercase;
     font-size: 10px; letter-spacing: .04em; cursor: pointer; user-select: none;
     white-space: nowrap;
@@ -494,6 +503,7 @@ app.get('/api/tabla-pendientes', async (req, res) => {
 </head>
 <body>
 <div class="card">
+<div class="table-wrap">
 <table>
   <thead>
     <tr>
@@ -507,6 +517,7 @@ app.get('/api/tabla-pendientes', async (req, res) => {
 ${filas}
   </tbody>
 </table>
+</div>
 </div>
 <script>
 (function () {
