@@ -435,12 +435,16 @@ app.get('/api/tabla-pendientes', async (req, res) => {
         const rows = await connection.query(
             'SELECT * FROM `pelis`.`form` WHERE Resuelto = 0 ORDER BY Fecha DESC LIMIT 50'
         );
+        const BADGE_CLASS = { pelicula: 'badge-pelicula', serie: 'badge-serie', fallo: 'badge-fallo' };
         const filas = rows.map((item) => {
             const tipoLabel = TIPO_LABEL[item.Tipo] || item.Tipo;
+            const badgeClass = BADGE_CLASS[item.Tipo] || 'badge-otro';
             const contenido = item.Nombre || item.Descripcion || '';
-            return `<tr>
-  <td>${escapeXml(item.Usuario || 'Anónimo')}</td>
-  <td>${escapeXml(tipoLabel)}</td>
+            const nombre = item.Usuario || 'Anónimo';
+            const fechaMs = item.Fecha ? new Date(item.Fecha).getTime() : 0;
+            return `<tr data-nombre="${escapeXml(nombre.toLowerCase())}" data-tipo="${escapeXml(tipoLabel.toLowerCase())}" data-descripcion="${escapeXml(contenido.toLowerCase())}" data-fecha="${fechaMs}">
+  <td>${escapeXml(nombre)}</td>
+  <td><span class="badge ${badgeClass}">${escapeXml(tipoLabel)}</span></td>
   <td>${escapeXml(contenido)}</td>
   <td>${escapeXml(timeAgo(item.Fecha))}</td>
 </tr>`;
@@ -452,22 +456,104 @@ app.get('/api/tabla-pendientes', async (req, res) => {
 <meta http-equiv="refresh" content="60">
 <style>
   :root { color-scheme: dark; }
-  body { margin: 0; padding: 8px 10px; font-family: system-ui, sans-serif; background: #1a1b1e; color: #e9ecef; font-size: 13px; }
+  html, body { background: transparent; }
+  body {
+    margin: 0; padding: 12px; box-sizing: border-box;
+    font-family: -apple-system, system-ui, "Segoe UI", sans-serif;
+    color: #e9ecef; font-size: 13px;
+  }
+  .card {
+    background: rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+  }
   table { width: 100%; border-collapse: collapse; }
-  th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid #2c2e33; }
-  th { color: #909296; font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: .03em; }
-  tr:last-child td { border-bottom: none; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+  th {
+    color: #a6a7ab; font-weight: 600; text-transform: uppercase;
+    font-size: 10px; letter-spacing: .04em; cursor: pointer; user-select: none;
+    white-space: nowrap;
+  }
+  th:hover { color: #e9ecef; }
+  th .arrow { display: inline-block; width: 10px; opacity: .8; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: rgba(255, 255, 255, 0.05); }
+  .badge {
+    display: inline-block; padding: 2px 9px; border-radius: 999px;
+    font-size: 11px; font-weight: 500; border: 1px solid transparent; white-space: nowrap;
+  }
+  .badge-pelicula { background: rgba(59, 130, 246, .18); color: #93c5fd; border-color: rgba(59, 130, 246, .35); }
+  .badge-serie { background: rgba(168, 85, 247, .18); color: #d8b4fe; border-color: rgba(168, 85, 247, .35); }
+  .badge-fallo { background: rgba(248, 113, 113, .18); color: #fca5a5; border-color: rgba(248, 113, 113, .35); }
+  .badge-otro { background: rgba(148, 163, 184, .18); color: #cbd5e1; border-color: rgba(148, 163, 184, .35); }
 </style>
 </head>
 <body>
+<div class="card">
 <table>
   <thead>
-    <tr><th>Nombre</th><th>Tipo</th><th>Descripción</th><th>Desde</th></tr>
+    <tr>
+      <th data-key="nombre">Nombre <span class="arrow"></span></th>
+      <th data-key="tipo">Tipo <span class="arrow"></span></th>
+      <th data-key="descripcion">Descripción <span class="arrow"></span></th>
+      <th data-key="fecha">Desde <span class="arrow">▼</span></th>
+    </tr>
   </thead>
   <tbody>
 ${filas}
   </tbody>
 </table>
+</div>
+<script>
+(function () {
+  var STORAGE_KEY = 'incidenciasplex-tabla-sort';
+  var tbody = document.querySelector('tbody');
+  var headers = Array.prototype.slice.call(document.querySelectorAll('th[data-key]'));
+
+  function loadSort() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+  function saveSort(key, dir) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ key: key, dir: dir })); } catch (e) {}
+  }
+  function applySort(key, dir) {
+    var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr'));
+    rows.sort(function (a, b) {
+      var va = a.dataset[key] || '';
+      var vb = b.dataset[key] || '';
+      if (key === 'fecha') { va = Number(va); vb = Number(vb); }
+      if (va < vb) return dir === 'asc' ? -1 : 1;
+      if (va > vb) return dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+    rows.forEach(function (r) { tbody.appendChild(r); });
+    headers.forEach(function (h) {
+      var arrow = h.querySelector('.arrow');
+      arrow.textContent = h.dataset.key === key ? (dir === 'asc' ? '▲' : '▼') : '';
+    });
+  }
+
+  headers.forEach(function (h) {
+    h.addEventListener('click', function () {
+      var key = h.dataset.key;
+      var current = loadSort();
+      var dir = (current && current.key === key && current.dir === 'asc') ? 'desc' : 'asc';
+      applySort(key, dir);
+      saveSort(key, dir);
+    });
+  });
+
+  var saved = loadSort();
+  if (saved) applySort(saved.key, saved.dir);
+})();
+</script>
 </body>
 </html>`;
         // Helmet fija X-Frame-Options: SAMEORIGIN globalmente, lo que impediría que
