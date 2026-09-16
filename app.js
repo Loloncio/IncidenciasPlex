@@ -463,33 +463,33 @@ app.get('/api/tabla-pendientes', async (req, res) => {
     color: #e9ecef; font-size: 13px;
   }
   .card {
-    background: rgba(255, 255, 255, 0.07);
-    backdrop-filter: blur(20px) saturate(160%);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(13, 15, 20, 0.78);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 14px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04);
     overflow: hidden;
   }
   table { width: 100%; border-collapse: collapse; }
-  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
   th {
-    color: #a6a7ab; font-weight: 600; text-transform: uppercase;
+    color: #8b8d94; font-weight: 600; text-transform: uppercase;
     font-size: 10px; letter-spacing: .04em; cursor: pointer; user-select: none;
     white-space: nowrap;
   }
   th:hover { color: #e9ecef; }
   th .arrow { display: inline-block; width: 10px; opacity: .8; }
   tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover td { background: rgba(255, 255, 255, 0.05); }
+  tbody tr:hover td { background: rgba(255, 255, 255, 0.04); }
   .badge {
     display: inline-block; padding: 2px 9px; border-radius: 999px;
     font-size: 11px; font-weight: 500; border: 1px solid transparent; white-space: nowrap;
   }
-  .badge-pelicula { background: rgba(59, 130, 246, .18); color: #93c5fd; border-color: rgba(59, 130, 246, .35); }
-  .badge-serie { background: rgba(168, 85, 247, .18); color: #d8b4fe; border-color: rgba(168, 85, 247, .35); }
-  .badge-fallo { background: rgba(248, 113, 113, .18); color: #fca5a5; border-color: rgba(248, 113, 113, .35); }
-  .badge-otro { background: rgba(148, 163, 184, .18); color: #cbd5e1; border-color: rgba(148, 163, 184, .35); }
+  .badge-pelicula { background: rgba(59, 130, 246, .22); color: #bfdbfe; border-color: rgba(96, 165, 250, .4); }
+  .badge-serie { background: rgba(168, 85, 247, .22); color: #e9d5ff; border-color: rgba(192, 132, 252, .4); }
+  .badge-fallo { background: rgba(248, 113, 113, .22); color: #fecaca; border-color: rgba(252, 165, 165, .4); }
+  .badge-otro { background: rgba(148, 163, 184, .22); color: #e2e8f0; border-color: rgba(148, 163, 184, .4); }
 </style>
 </head>
 <body>
