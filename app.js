@@ -8,6 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
+const crypto = require('crypto');
 require('dotenv').config();
 
 // Variables de entorno obligatorias: si falta alguna, se para el arranque en vez de fallar en caliente.
@@ -338,6 +339,72 @@ app.get('/api/registro', requireAdmin, async (req, res) => {
     } catch (err) {
         logError('Error en /api/registro: ' + err.stack);
         res.status(500).send('Error al obtener incidencias');
+    }
+});
+
+// Comparación de tokens en tiempo constante para evitar timing attacks.
+function tokenMatches(provided, expected) {
+    const providedBuf = Buffer.from(String(provided || ''));
+    const expectedBuf = Buffer.from(String(expected));
+    if (providedBuf.length !== expectedBuf.length) {
+        return false;
+    }
+    return crypto.timingSafeEqual(providedBuf, expectedBuf);
+}
+
+function escapeXml(value) {
+    return String(value ?? '').replace(/[<>&'"]/g, (c) => ({
+        '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;',
+    }[c]));
+}
+
+const TIPO_LABEL = { pelicula: 'Película', serie: 'Serie', fallo: 'Incidencia' };
+
+// Feed RSS de solicitudes/incidencias pendientes, pensado para widgets externos
+// (p.ej. el widget RSS de Homarr) que no pueden autenticarse con la cookie de sesión.
+// Se protege con un token compartido en la URL en vez de con /login porque Homarr
+// pide el feed desde su propio backend, sin sesión de navegador.
+app.get('/api/rss/pendientes', async (req, res) => {
+    if (!process.env.RSS_TOKEN || !tokenMatches(req.query.token, process.env.RSS_TOKEN)) {
+        return res.status(404).send('Not found');
+    }
+    let connection;
+    try {
+        connection = await pool.getConnection();
+        const rows = await connection.query(
+            'SELECT * FROM `pelis`.`form` WHERE Resuelto = 0 ORDER BY Fecha DESC LIMIT 50'
+        );
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        const items = rows.map((item) => {
+            const tipoLabel = TIPO_LABEL[item.Tipo] || item.Tipo;
+            const contenido = item.Nombre || item.Descripcion || '';
+            const title = `${item.Usuario || 'Anónimo'} — ${tipoLabel}: ${contenido}`;
+            const pubDate = item.Fecha ? new Date(item.Fecha).toUTCString() : new Date().toUTCString();
+            return `<item>
+  <title>${escapeXml(title)}</title>
+  <description>${escapeXml(contenido)}</description>
+  <link>${baseUrl}/consultas</link>
+  <guid isPermaLink="false">incidenciasplex-${item.ID}</guid>
+  <pubDate>${pubDate}</pubDate>
+</item>`;
+        }).join('\n');
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+  <title>IncidenciasPlex - Pendientes</title>
+  <link>${baseUrl}</link>
+  <description>Solicitudes e incidencias pendientes de resolver</description>
+  <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+${items}
+</channel>
+</rss>`;
+        res.set('Content-Type', 'application/rss+xml; charset=utf-8');
+        res.send(xml);
+    } catch (err) {
+        logError('Error en /api/rss/pendientes: ' + err.stack);
+        res.status(500).send('Error al generar el feed');
+    } finally {
+        if (connection) connection.end();
     }
 });
 // Crea la cuenta admin inicial si no existe ninguna con ese usuario. Solo actúa si
