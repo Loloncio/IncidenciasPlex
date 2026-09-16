@@ -16,8 +16,8 @@ fi
   -- Usuario "web": incidencias/solicitudes (tabla form), lectura del catálogo (newmovies)
   -- y limpieza de la cola de notificaciones (la usa también el servicio notifier).
   CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PWD}';
-  GRANT SELECT, INSERT, UPDATE ON pelis.form TO '${DB_USER}'@'%';
-  GRANT SELECT ON pelis.newmovies TO '${DB_USER}'@'%';
+  GRANT SELECT, INSERT, UPDATE, DELETE ON pelis.form TO '${DB_USER}'@'%';
+  GRANT SELECT, DELETE ON pelis.newmovies TO '${DB_USER}'@'%';
   GRANT SELECT, DELETE ON pelis.notificaciones TO '${DB_USER}'@'%';
 
   -- Usuario "usuarios": login y alta de cuentas (tabla usuarios) únicamente.
