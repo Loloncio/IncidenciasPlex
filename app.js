@@ -407,6 +407,83 @@ ${items}
         if (connection) connection.end();
     }
 });
+
+// "Hace X min/h/d", en español, para la columna "Desde" de la tabla de pendientes.
+function timeAgo(date) {
+    if (!date) return '';
+    const diffMin = Math.floor((Date.now() - new Date(date).getTime()) / 60000);
+    if (diffMin < 1) return 'justo ahora';
+    if (diffMin < 60) return `hace ${diffMin} min`;
+    const diffHoras = Math.floor(diffMin / 60);
+    if (diffHoras < 24) return `hace ${diffHoras} h`;
+    const diffDias = Math.floor(diffHoras / 24);
+    return `hace ${diffDias} d`;
+}
+
+// Misma protección por token que el feed RSS, pero en HTML con formato de tabla
+// (para el widget "iframe" de Homarr en vez del widget "RSS"). Se autorefresca
+// con <meta refresh> porque el widget iframe de Homarr no vuelve a pedir la URL
+// por sí solo. Siempre imprime la cabecera de la tabla, incluso sin pendientes,
+// para que el hueco en el dashboard no quede vacío/confuso.
+app.get('/api/tabla-pendientes', async (req, res) => {
+    if (!process.env.RSS_TOKEN || !tokenMatches(req.query.token, process.env.RSS_TOKEN)) {
+        return res.status(404).send('Not found');
+    }
+    let connection;
+    try {
+        connection = await pool.getConnection();
+        const rows = await connection.query(
+            'SELECT * FROM `pelis`.`form` WHERE Resuelto = 0 ORDER BY Fecha DESC LIMIT 50'
+        );
+        const filas = rows.map((item) => {
+            const tipoLabel = TIPO_LABEL[item.Tipo] || item.Tipo;
+            const contenido = item.Nombre || item.Descripcion || '';
+            return `<tr>
+  <td>${escapeXml(item.Usuario || 'Anónimo')}</td>
+  <td>${escapeXml(tipoLabel)}</td>
+  <td>${escapeXml(contenido)}</td>
+  <td>${escapeXml(timeAgo(item.Fecha))}</td>
+</tr>`;
+        }).join('\n');
+        const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="refresh" content="60">
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; padding: 8px 10px; font-family: system-ui, sans-serif; background: #1a1b1e; color: #e9ecef; font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid #2c2e33; }
+  th { color: #909296; font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: .03em; }
+  tr:last-child td { border-bottom: none; }
+</style>
+</head>
+<body>
+<table>
+  <thead>
+    <tr><th>Nombre</th><th>Tipo</th><th>Descripción</th><th>Desde</th></tr>
+  </thead>
+  <tbody>
+${filas}
+  </tbody>
+</table>
+</body>
+</html>`;
+        // Helmet fija X-Frame-Options: SAMEORIGIN globalmente, lo que impediría que
+        // Homarr (otro origen) incruste esta página en su widget iframe.
+        res.removeHeader('X-Frame-Options');
+        res.setHeader('Content-Security-Policy', "frame-ancestors *");
+        res.set('Content-Type', 'text/html; charset=utf-8');
+        res.send(html);
+    } catch (err) {
+        logError('Error en /api/tabla-pendientes: ' + err.stack);
+        res.status(500).send('Error al generar la tabla');
+    } finally {
+        if (connection) connection.end();
+    }
+});
+
 // Crea la cuenta admin inicial si no existe ninguna con ese usuario. Solo actúa si
 // ADMIN_USER/ADMIN_PASSWORD están definidas (pensado para el primer arranque en un
 // despliegue nuevo, p.ej. Docker con una BD recién creada); si ya existe, no hace nada.
